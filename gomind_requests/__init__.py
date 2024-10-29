@@ -1,5 +1,5 @@
 import requests
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import boto3
 import os
 from pathlib import Path
@@ -80,6 +80,19 @@ class OfficeConfig:
     updated_at:                 str | None
     certificate:                list | None
 
+    # Mapeamento dos campos de config da API (API -> OfficeConfig)
+    # Acrescentar campos com nomes diferentes aqui
+    field_mapping = {
+        'email': 'usuario',
+        'password': 'senha',
+        'nibo_login': 'usuario_nibo',
+        'nibo_password': 'senha_nibo',
+        'dominio_user': 'usuario_dominio',
+        'dominio_password': 'senha_dominio',
+        'recipient_email': 'destinatario_email',
+        'copy_email': 'email_cc',
+    }
+
 @dataclass
 class TotalData:
     customers:  list
@@ -87,11 +100,25 @@ class TotalData:
 
 
 def getOfficeData(data) -> OfficeConfig:
-    return OfficeConfig(*data.values())
+    valid_fields = {field.name for field in fields(OfficeConfig)}
+    mapped_data = {}
+    
+    for api_field, value in data.items():
+        # Checar se tem mapeamento para esse campo
+        if api_field in OfficeConfig.field_mapping:
+            dataclass_field = OfficeConfig.field_mapping[api_field]
+            mapped_data[dataclass_field] = value
+        # Se nenhum mapeamento existir, tentar usar nome original
+        elif api_field in valid_fields:
+            mapped_data[api_field] = value
+    
+    return OfficeConfig(**mapped_data)
 
 
 def getCustomerData(data) -> CustomersData:
-    return CustomersData(*data.values())
+    dataclass_fields = {field.name for field in fields(CustomersData)}
+    filtered_data = {k: v for k, v in data.items() if k in dataclass_fields}
+    return CustomersData(**filtered_data)
 
 
 def getTotalData(data, config) -> TotalData:
