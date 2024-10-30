@@ -9,6 +9,7 @@ import gomind_cli as cli
 from datetime import datetime
 import sys
 from dotenv import load_dotenv
+import gomind_cli as cli
 import shutil
 import gomind_sqlite_to_excel as sql2excel
 try:
@@ -81,16 +82,16 @@ class OfficeConfig:
     certificate:                list | None
 
     # Mapeamento dos campos de config da API (API -> OfficeConfig)
-    # Acrescentar campos com nomes diferentes aqui
+    # Acrescentar campos com nomes diferentes aquiv
     field_mapping = {
-        'email': 'usuario',
-        'password': 'senha',
-        'nibo_login': 'usuario_nibo',
-        'nibo_password': 'senha_nibo',
-        'dominio_user': 'usuario_dominio',
+        'email':            'usuario',
+        'password':         'senha',
+        'nibo_login':       'usuario_nibo',
+        'nibo_password':    'senha_nibo',
+        'dominio_user':     'usuario_dominio',
         'dominio_password': 'senha_dominio',
-        'recipient_email': 'destinatario_email',
-        'copy_email': 'email_cc',
+        'recipient_email':  'destinatario_email',
+        'copy_email':       'email_cc',
     }
 
 @dataclass
@@ -100,8 +101,8 @@ class TotalData:
 
 
 def getOfficeData(data) -> OfficeConfig:
-    valid_fields = {field.name for field in fields(OfficeConfig)}
-    mapped_data = {}
+    valid_fields    = {field.name for field in fields(OfficeConfig)}
+    mapped_data     = {}
     
     for api_field, value in data.items():
         # Checar se tem mapeamento para esse campo
@@ -197,8 +198,14 @@ def dataConfig(url, token, robot_id, customer_id) -> CustomersData:
 
         config.certificate = remove_duplicates(cert)
         toRemove    = {'office_configuration','updated_at', 'created_at', 'robot'}
+        
+        clients_id = CLI_ARGUMENTS.get("customers", [])
 
         for object in data:
+            
+            if len(clients_id) != 0  and object['id'] not in clients_id:
+                continue
+
             clientInfo  = {k: v for k, v in object.items() if k not in toRemove}
             clientInfo['municipal_registration'] = removeNonAlphanumeric(clientInfo['municipal_registration'])
             emptyStringToNone(clientInfo)
