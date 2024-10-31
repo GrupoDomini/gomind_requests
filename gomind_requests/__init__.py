@@ -351,7 +351,7 @@ def getStep(url: str, token: str, robot_id: int|str, customer_id: int|str, erp_c
         competence = str(response.json()['robot_log']['data'][0]['robot_log']['competence_month']) + '/' + str(response.json()['robot_log']['data'][0]['robot_log']['competence_year'])
         response = str(response.json()['robot_log']['data'][0]['robot_log']['step'])
     except:
-        response = False
+        return False
 
     return response, competence
 
