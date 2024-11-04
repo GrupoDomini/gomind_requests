@@ -54,6 +54,7 @@ class CustomersData:
     city_hall_password_2:       str | None  
     employer_web_user:          str | None  
     employer_web_password:      str | None
+    apuration_regime:           str | None
 
 
 @dataclass
