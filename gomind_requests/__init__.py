@@ -29,7 +29,8 @@ load_dotenv()
 user        = os.getenv('MIA_LOGIN')
 passwd      = os.getenv('MIA_PASSWORD')
 url         = os.getenv('MIA_URL')
-
+ANO_MIA     = CLI_ARGUMENTS.get("competenceMonth")
+MES_MIA     = CLI_ARGUMENTS.get("competenceYear")
 @dataclass
 class CustomersData:
     #informações do cliente
@@ -166,6 +167,19 @@ def getRobotNameById(url, token, robot_id, customer_id):
         for robot in data:
             if robot.get('id') == robot_id:
                 return robot.get('description')
+    except:
+        return False
+
+
+def getRobotCodeById(url, token, robot_id, customer_id):
+    header      = {"Authorization": f"Bearer {token}"}
+    response    = requests.get(f'{url}/api/robots?customer_id={customer_id}6&all_data=true', headers=header)
+    
+    try:
+        data = response.json().get('robots', {}).get('data', [])
+        for robot in data:
+            if robot.get('id') == robot_id:
+                return robot.get('name')
     except:
         return False
 
@@ -580,11 +594,18 @@ def zip_directory(folder_path, output_filename):
                 file_path = os.path.join(root, file)
                 zipf.write(file_path, os.path.relpath(file_path, folder_path))
 
+#colocar data correta no arquivo
 def get_s3_zip(client_id:int|str, robot_id:int|str, local_directory:str, competencia:str = '', to_ignore:list = []) -> str|bool:
     try:
         dir = s3_dowloadAll(client_id, robot_id, local_directory, competencia, to_ignore)
-        current_date = datetime.now().strftime('%Y%m')
-        zip = os.path.join(local_directory, f"arquivos_baixados_{current_date}.zip")
+        current_date    = datetime.now().strftime('%Y%m%H%M%S')
+        competence      = str(CLI_ARGUMENTS.get('competenceMonth')) + '_' + str(CLI_ARGUMENTS.get('competenceYear'))
+        token           = getToken(url, user, passwd)
+        robotName       = getRobotCodeById(url, token, robot_id, client_id)
+        if not robotName:
+            robotName = 'arquivos_baixados'
+
+        zip             = os.path.join(local_directory, f"{robotName}_{competence}-{current_date}.zip")
         
         # Levando em consideração que o local_directory é sempre o caminho do projeto
         if mia_db := get_db_in_xlsx(local_directory):
