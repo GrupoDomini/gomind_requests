@@ -620,6 +620,37 @@ def get_s3_zip(client_id:int|str, robot_id:int|str, local_directory:str, compete
     except Exception as e:
         logger.log(e)
         return False
+###
+def s3_link_generate(s3_file_path: str, client_id: str | int, robot_id: str | int, mes: int = None, ano: int = None, nome_empresa: str = None
+) -> None:
+    
+    s3              = boto3.client("s3")
+    file_name       = os.path.basename(s3_file_path)
+    # local_file_path = os.path.join(local_file_path, file_name)
+
+    bucket_name     = os.getenv('BUCKET_NAME')
+
+    if not bucket_name:
+        raise ValueError("Variável de ambiente BUCKET_NAME não definida.")
+
+    # Upload de arquivo para o S3
+    if mes == None or ano == None:
+        s3_file_path_new = f"clients/{client_id}/robot/{robot_id}/{file_name}"
+    else:
+        s3_file_path_new = f"clients/{client_id}/robot/{robot_id}/{nome_empresa}/{mes}_{ano}/{file_name}"
+
+    try:
+        # s3.download_file(bucket_name, s3_file_path_new, local_file_path)
+        s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': s3_file_path_new}, ExpiresIn=(((60*60)*24)*365)*5)
+
+        logger.log(
+            f"Link gerado com sucesso {s3_file_path_new}."
+        )
+    except Exception as e:
+        logger.log(f"Erro ao gerar link para {s3_file_path_new}: {e}")
+        return
+
+    logger.log("Download de arquivos concluído.")
 
 
 def stepMia(action:str, step:str, log_name:str, path_log:str, erp_code:int|str='', archive_name:str='', path_url:str='', end_time: bool=False):
